@@ -38,11 +38,11 @@ func NewProgram(progType ProgType, instructions *Instructions, license string, k
 	fd, e := bpfCall(_ProgLoad, unsafe.Pointer(&progCreateAttr{
 		progType:     progType,
 		insCount:     insCount,
-		instructions: uint64(uintptr(unsafe.Pointer(&cInstructions[0]))),
-		license:      uint64(uintptr(unsafe.Pointer(&lic[0]))),
+		instructions: &cInstructions[0],
+		license:      &lic[0],
 		logLevel:     1,
 		logSize:      LogBufSize,
-		logBuf:       uint64(uintptr(unsafe.Pointer(&logs[0]))),
+		logBuf:       &logs[0],
 	}), 48)
 	if e != 0 {
 		if len(logs) > 0 {

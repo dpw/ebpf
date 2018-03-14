@@ -14,13 +14,13 @@ type mapCreateAttr struct {
 type mapOpAttr struct {
 	mapFd   uint32
 	padding uint32
-	key     uint64
-	value   uint64
+	key     *byte
+	value   *byte
 	flags   uint64
 }
 
 type pinObjAttr struct {
-	fileName uint64
+	fileName *byte
 	fd       uint32
 	padding  uint32
 }
@@ -28,11 +28,11 @@ type pinObjAttr struct {
 type progCreateAttr struct {
 	progType      ProgType
 	insCount      uint32
-	instructions  uint64
-	license       uint64
+	instructions  *bpfInstruction
+	license       *byte
 	logLevel      uint32
 	logSize       uint32
-	logBuf        uint64
+	logBuf        *byte
 	kernelVersion uint32
 	padding       uint32
 }
@@ -90,9 +90,15 @@ func bpfErrNo(e syscall.Errno) error {
 	return e
 }
 
+func nulTerminate(s string) []byte {
+	res := make([]byte, len(s)+1)
+	copy(res, s)
+	return res
+}
+
 func pinObject(fileName string, fd uint32) error {
 	_, errNo := bpfCall(_ObjPin, unsafe.Pointer(&pinObjAttr{
-		fileName: uint64(uintptr(unsafe.Pointer(&[]byte(fileName)[0]))),
+		fileName: &nulTerminate(fileName)[0],
 		fd:       fd,
 	}), 16)
 	return bpfErrNo(errNo)
@@ -100,7 +106,7 @@ func pinObject(fileName string, fd uint32) error {
 
 func getObject(fileName string) (uintptr, error) {
 	ptr, errNo := bpfCall(_ObjGet, unsafe.Pointer(&pinObjAttr{
-		fileName: uint64(uintptr(unsafe.Pointer(&[]byte(fileName)[0]))),
+		fileName: &nulTerminate(fileName)[0],
 	}), 16)
 	return ptr, bpfErrNo(errNo)
 }
